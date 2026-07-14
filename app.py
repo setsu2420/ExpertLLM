@@ -107,6 +107,31 @@ def metrics_endpoint():
 
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
+
+@app.route("/health")
+def health_check():
+    """健康检查端点 - 用于Docker/docker-compose健康检查"""
+    health = {"status": "ok", "service": "ExpertLLM-V3"}
+    try:
+        from utils.redis_client import get_redis
+        r = get_redis()
+        if r:
+            r.ping()
+            health["redis"] = "connected"
+        else:
+            health["redis"] = "disabled"
+    except Exception:
+        health["redis"] = "disconnected"
+
+    try:
+        from models import db
+        db.session.execute(db.text("SELECT 1"))
+        health["database"] = "connected"
+    except Exception:
+        health["database"] = "disconnected"
+
+    return jsonify(health)
+
 # 验证配置
 config.validate_config()
 
