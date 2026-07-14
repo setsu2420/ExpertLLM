@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户中心</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='user.css') }}">
+</head>
+<body data-current-user="{{ current_user_id or '' }}">
+    <button id="menu-toggle" title="收起/展开侧边栏">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <div class="sidebar-left" id="sidebar-left">
+        <div class="new-chat-btn user-nav active" data-view="profile">
+            <span class="material-symbols-outlined">person</span>
+            <span>个人信息</span>
+        </div>
+        <div class="new-chat-btn user-nav" data-view="history">
+            <span class="material-symbols-outlined">history</span>
+            <span>历史记录</span>
+        </div>
+        <div class="new-chat-btn" onclick="location.href='/'">
+            <span class="material-symbols-outlined">home</span>
+            <span>返回首页</span>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <!-- 个人信息面板 -->
+        <div class="panel-section" id="view-profile">
+            <div class="panel-title">
+                <span class="material-symbols-outlined">person</span>
+                个人信息
+            </div>
+            <form id="user-profile-form" class="user-form">
+                <div class="user-form-row">
+                    <label>账号</label>
+                    <input id="profile-user-id" name="user_id" type="text" disabled>
+                </div>
+                <div class="user-form-row">
+                    <label>学校</label>
+                    <input id="profile-school" name="school" type="text" disabled>
+                </div>
+                <div class="user-form-row">
+                    <label>专业</label>
+                    <input id="profile-major" name="major" type="text" disabled>
+                </div>
+                <div class="user-form-row">
+                    <label>注册时间</label>
+                    <input id="profile-created-at" name="created_at" type="text" disabled>
+                </div>
+            </form>
+            <div class="panel-title">
+                <span class="material-symbols-outlined">settings</span>
+                修改密码
+            </div>
+            <form id="change-password-form" class="user-form">
+                <div class="user-form-row">
+                    <label>原密码</label>
+                    <input id="profile-old-password" name="old_password" type="password" required>
+                </div>
+                <div class="user-form-row">
+                    <label>新密码</label>
+                    <input id="profile-new-password" name="new_password" type="password" required maxlength="128">
+                    <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+                        <progress id="profile-password-strength-bar" value="0" max="100" style="width:160px; height:10px;"></progress>
+                        <span id="profile-password-strength-text" class="muted">密码强度：—</span>
+                    </div>
+                </div>
+                <div class="user-form-row">
+                    <button type="submit" class="primary-btn">提交</button>
+                    <span class="muted" id="profile-status"></span>
+                </div>
+            </form>
+        </div>
+
+        <!-- 历史记录面板 -->
+        <div class="panel-section hidden-panel" id="view-history">
+            <div class="panel-title">
+                <span class="material-symbols-outlined">history</span>
+                历史问答记录
+            </div>
+            <div id="user-history-list" class="user-history-list"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='user.js') }}"></script>
+</body>
+</html>

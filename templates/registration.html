@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>注册 - Expert AI Studio</title>
+	<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='enhanced_style.css') }}">
+	<!-- inert polyfill for better a11y in older browsers -->
+	<script src="https://unpkg.com/wicg-inert/dist/inert.min.js"></script>
+</head>
+<body class="auth-page">
+	<div class="auth-card enh-card">
+		<div class="card-header">
+			<h1><span class="material-symbols-outlined">how_to_reg</span>注册</h1>
+		</div>
+		<!-- <p class="subtext enh-subtext">请填写学校信息、学号和密码，并上传学生证照片</p> -->
+
+		{% if error %}
+		<div class="form-error" style="margin-bottom:12px;">
+			<span class="material-symbols-outlined" style="vertical-align: -4px; margin-right: 6px;">error</span>
+			{{ error }}
+		</div>
+		{% endif %}
+
+		<form class="auth-form multi-step enh-form" method="post" action="{{ url_for('auth.registration') }}" enctype="multipart/form-data">
+			<div class="steps-wrapper" style="position:relative; height:360px; overflow:hidden;">
+				<!-- Step 1: Job -->
+				<div class="step enh-step" data-step="1">
+					<h3>您的职业是什么？</h3>
+					<select id="job" name="job" class="enh-select" required style="width:100%; padding:10px; font-size:1em;"></select>
+					<div id="job-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="next-btn enh-btn nav-btn">下一步<span class="material-symbols-outlined">arrow_forward</span></button></div>
+				</div>
+
+				<!-- Step 2: Company (shown for non-students) -->
+				<div class="step enh-step" data-step="2">
+					<h3>您目前在何处工作？（可选）</h3>
+					<input id="company" name="company" type="text" class="enh-input" placeholder="请输入工作单位或公司（可跳过）">
+					<div id="company-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span>上一步</button> <button type="button" class="next-btn enh-btn nav-btn">下一步<span class="material-symbols-outlined">arrow_forward</span></button></div>
+				</div>
+
+				<!-- Step 2: School -->
+				<div class="step enh-step" data-step="2">
+					<h3 id="school-prompt">您现在就读于？</h3>
+					<input id="school" name="school" type="text" class="enh-input" placeholder="请输入学校名称">
+					<div id="school-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span>上一步</button> <button type="button" class="next-btn enh-btn nav-btn">下一步<span class="material-symbols-outlined">arrow_forward</span></button></div>
+				</div>
+
+				<!-- Step 3: Major -->
+				<div class="step enh-step" data-step="3">
+					<h3>您的专业是什么？</h3>
+					<input id="major" name="major" type="text" class="enh-input" placeholder="请输入专业">
+					<div id="major-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span>上一步</button> <button type="button" class="next-btn enh-btn nav-btn">下一步<span class="material-symbols-outlined">arrow_forward</span></button></div>
+				</div>
+
+
+
+				<!-- Step 5: 手机 (作为 user_id) -->
+				<div class="step enh-step" data-step="5">
+					<h3>您的手机号是什么？</h3>
+					<input id="user_id" name="user_id" type="text" class="enh-input" placeholder="11 位手机号">
+					<div id="user-id-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span>上一步</button> <button type="button" class="next-btn enh-btn nav-btn">下一步<span class="material-symbols-outlined">arrow_forward</span></button></div>
+				</div>
+
+				<!-- Step 6: Password -->
+				<div class="step enh-step" data-step="6">
+					<h3>请输入密码</h3>
+					<input id="password" name="password" type="password" class="enh-input" placeholder="密码">
+					<div id="password-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div id="password-strength" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+						<progress id="password-strength-bar" value="0" max="100" style="width:160px; height:10px;"></progress>
+						<span id="password-strength-text" style="color:var(--text-sub); font-size:0.95em;">密码强度：—</span>
+					</div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span>上一步</button> <button type="button" class="next-btn enh-btn nav-btn">下一步<span class="material-symbols-outlined">arrow_forward</span></button></div>
+				</div>
+
+				<!-- Step 7: Confirm Password -->
+				<div class="step enh-step" data-step="7">
+					<h3>请再次输入密码</h3>
+					<input id="confirm_password" name="confirm_password" type="password" class="enh-input" placeholder="再次输入密码">
+					<div id="confirm-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span>上一步</button> <button type="button" class="next-btn enh-btn nav-btn"><span class="material-symbols-outlined">check</span> 完成注册</button></div>
+				</div>
+
+				<!-- Step 8: Optional student card -->
+				<div class="step enh-step" data-step="8">
+					<h3>上传学生证可进行学生认证（可选）</h3>
+										<div class="enh-file-wrap">
+											<input id="student_card" name="student_card" type="file" class="enh-input" accept="image/*">
+										</div>
+					<div class="form-hint">上传可获得学生认证，大小不超过 16MB，可跳过</div>
+					<div id="file-error" class="form-error" style="display:none; margin-top:8px;"></div>
+					<div class="step-nav"><button type="button" class="prev-btn enh-btn nav-btn"><span class="material-symbols-outlined">arrow_back</span></button> <button type="submit" class="primary-btn enh-btn enh-btn-primary"><span class="material-symbols-outlined">check</span> 完成注册</button></div>
+				</div>
+			</div>
+			<div class="form-footer enh-form-footer">已有账号？<a class="text-link" href="{{ url_for('auth.login') }}">去登录</a></div>
+		</form>
+	</div>
+
+	<!-- 全局确认模态（用于注册成功/失败的确认跳转） -->
+	<div id="global-confirm-modal" style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center;">
+		<div id="global-confirm-backdrop" style="position:absolute; inset:0; background:linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.65)); backdrop-filter: blur(4px);"></div>
+		<div id="global-confirm-box" role="dialog" aria-modal="true" style="position:relative; background:var(--card-bg, #ffffff); padding:20px; border-radius:10px; width:420px; max-width:94%; box-shadow:0 18px 40px rgba(9,30,66,0.35); border:1px solid rgba(15,23,42,0.06); color:var(--text, #081425);">
+			<div id="global-confirm-message" style="color:var(--text, #081425); margin-bottom:14px; font-size:1em; line-height:1.4;"></div>
+			<div style="display:flex; gap:8px; justify-content:flex-end;">
+				<button id="global-confirm-ok" class="enh-btn enh-btn-primary" style="background: linear-gradient(180deg,#2f9df5,#1b6fd6); color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:600;">确定</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		(function() {
+			const form = document.querySelector('.auth-form');
+			const steps = Array.from(document.querySelectorAll('.step'));
+			let current = 0;
+
+			// inputs
+			const jobEl = document.getElementById('job');
+			const schoolEl = document.getElementById('school');
+			const majorEl = document.getElementById('major');
+			const companyEl = document.getElementById('company');
+			const userIdEl = document.getElementById('user_id');
+			const passwordEl = document.getElementById('password');
+			const confirmEl = document.getElementById('confirm_password');
+			const fileInput = document.getElementById('student_card');
+
+			const jobPrompt = document.getElementById('school-prompt');
+			const passwordStrengthBar = document.getElementById('password-strength-bar');
+			const passwordStrengthText = document.getElementById('password-strength-text');
+
+			const MAX_SIZE = 1.5 * 1024 * 1024;
+			// allow slash for entries like "教师 / 教育工作者"
+			const textRe = /^[\u4e00-\u9fa5A-Za-z0-9 _./-]{2,50}$/;
+			const passwordRe = /^\S{1,128}$/;
+			const studentIdRe = null;
+			const phoneRe = /^1\d{10}$/;
+
+			function safeFocusMove(fromStep, toStep) {
+	            try {
+	                if (fromStep && fromStep.contains(document.activeElement)) {
+	                    const selector = 'input,select,button,textarea,a[href],[tabindex]:not([tabindex="-1"])';
+	                    const nextFocusable = (toStep && toStep.querySelector(selector)) || document.querySelector('.auth-card') || document.body;
+	                    if (nextFocusable) {
+	                        // ensure the element is focusable
+	                        if (nextFocusable.tabIndex === undefined || nextFocusable.tabIndex < 0) {
+	                            try { nextFocusable.tabIndex = -1; } catch (e) {}
+	                        }
+	                        nextFocusable.focus();
+	                    } else {
+	                        document.activeElement.blur && document.activeElement.blur();
+	                    }
+	                }
+	            } catch (e) {
+	                // ignore focus errors
+	            }
+	        }
+
+			function showStep(index) {
+				const oldIndex = current;
+				const oldStep = steps[oldIndex];
+				const newStep = steps[index];
+
+				// move focus out of the step we're about to hide
+				safeFocusMove(oldStep, newStep);
+
+				steps.forEach((s, i) => {
+					s.style.transition = 'transform 250ms ease, opacity 250ms ease';
+					s.style.position = 'absolute';
+					s.style.left = '0';
+					if (i === index) {
+						s.style.transform = 'translateX(0)';
+						s.style.opacity = '1';
+						s.style.zIndex = '2';
+						s.style.pointerEvents = 'auto';
+						s.removeAttribute('aria-hidden');
+						try { s.inert = false; } catch (e) {}
+					} else if (i < index) {
+						s.style.transform = 'translateX(-30px)';
+						s.style.opacity = '0';
+						s.style.zIndex = '1';
+						s.style.pointerEvents = 'none';
+						s.setAttribute('aria-hidden', 'true');
+						try { s.inert = true; } catch (e) {}
+					} else {
+						s.style.transform = 'translateX(30px)';
+						s.style.opacity = '0';
+						s.style.zIndex = '1';
+						s.style.pointerEvents = 'none';
+						s.setAttribute('aria-hidden', 'true');
+						try { s.inert = true; } catch (e) {}
+					}
+				});
+
+				current = index;
+
+				// focus the first focusable element in the new step for keyboard users
+				try {
+					const sel = 'input,select,button,textarea,a[href],[tabindex]:not([tabindex="-1"])';
+					const first = newStep && newStep.querySelector(sel);
+					if (first) first.focus();
+				} catch (e) {}
+			}
+
+			function loadJobs() {
+				fetch("{{ url_for('static', filename='assets/job.json') }}")
+					.then(r => r.json())
+					.then(data => {
+						(jobEl.innerHTML = data.job.map(j => `<option value="${j}">${j}</option>`).join('\n'));
+						// update prompt and confirm button text immediately after jobs load
+						updateSchoolPrompt();
+						updateConfirmNextText();
+					});
+			}
+
+			function updateSchoolPrompt() {
+				if (jobEl.value && jobEl.value.indexOf('学生') !== -1) {
+					jobPrompt.textContent = '您现在就读于？';
+				} else {
+					jobPrompt.textContent = '您在从业前，就读于？';
+				}
+			}
+
+			// 根据是否为学生调整“再次输入密码”页的下一步按钮文案
+			function updateConfirmNextText() {
+				try {
+					const isStudent = jobEl.value && jobEl.value.indexOf('学生') !== -1;
+					const confirmStep = steps[6]; // 确认密码页在步骤数组中的位置
+					if (!confirmStep) return;
+					const nextBtn = confirmStep.querySelector('.next-btn');
+					if (!nextBtn) return;
+					if (isStudent) {
+						nextBtn.innerHTML = '<span class="material-symbols-outlined">arrow_forward</span> 下一步';
+						nextBtn.title = '学生：下一步上传学生证（可选）';
+					} else {
+						nextBtn.innerHTML = '<span class="material-symbols-outlined">check</span> 完成注册';
+						nextBtn.title = '非学生：完成注册';
+					}
+				} catch (e) {}
+			}
+
+			function scorePassword(pw) {
+				let score = 0;
+				if (!pw) return 0;
+				score += Math.min(40, pw.length * 2);
+				if (/[a-z]/.test(pw)) score += 10;
+				if (/[A-Z]/.test(pw)) score += 15;
+				if (/\d/.test(pw)) score += 15;
+				if (/[^A-Za-z0-9]/.test(pw)) score += 20;
+				return Math.min(100, score);
+			}
+
+			function updateStrength(pw) {
+				const s = scorePassword(pw);
+				if (passwordStrengthBar) passwordStrengthBar.value = s;
+				if (!pw) { passwordStrengthText.textContent = '密码强度：—'; return; }
+				passwordStrengthText.textContent = s < 40 ? '密码强度：弱' : s < 70 ? '密码强度：中' : '密码强度：强';
+			}
+
+			// navigation
+			form.addEventListener('click', (e) => {
+				// Only handle clicks that originate from the currently visible step
+				const clickedStep = e.target.closest('.step');
+				const btn = e.target.closest('button');
+				if (!clickedStep || clickedStep !== steps[current]) return;
+				if (!btn) return;
+
+				if (btn.classList.contains('next-btn')) {
+					// special: if moving from job (0) decide next based on student status
+					if (current === 0) {
+						const isStudent = jobEl.value && jobEl.value.indexOf('学生') !== -1;
+						if (!validateStep(current)) return;
+						showStep(isStudent ? 2 : 1);
+						return;
+					}
+					// If we're on confirm step (index 6): students go to upload; non-students finish
+					if (current === 6) {
+						const isStudent = jobEl.value && jobEl.value.indexOf('学生') !== -1;
+						if (!validateStep(current)) return;
+						if (isStudent) {
+							showStep(7);
+						} else {
+							form.requestSubmit();
+						}
+						return;
+					}
+					if (validateStep(current)) showStep(Math.min(steps.length - 1, current + 1));
+				}
+				if (btn.classList.contains('prev-btn')) {
+					// 如果当前是学校页（index 2）并且选择的是学生，则返回职业页（index 0），否则按常规后退
+					if (current === 2 && jobEl.value && jobEl.value.indexOf('学生') !== -1) {
+						showStep(0);
+					} else {
+						showStep(Math.max(0, current - 1));
+					}
+				}
+			});
+
+			// Enter to advance
+			form.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					// If we're on confirm step (index 6) and user is NOT student, submit immediately
+					const isStudentNow = jobEl.value && jobEl.value.indexOf('学生') !== -1;
+					if (current === 6 && !isStudentNow) {
+						if (!validateStep(current)) return;
+						form.requestSubmit();
+						return;
+					}
+					if (validateStep(current)) showStep(Math.min(steps.length - 1, current + 1));
+				}
+			});
+
+			// 拦截表单提交，使用 fetch 提交以便显示弹窗并在确认后重置页面
+			form.addEventListener('submit', (e) => {
+				e.preventDefault();
+				if (!validateStep(current)) return;
+				const fd = new FormData(form);
+				fetch(form.action, {
+					method: 'POST',
+					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+					body: fd
+				}).then(async (resp) => {
+					const data = await resp.json().catch(() => null);
+					const msg = data && data.message ? data.message : '注册失败，请重试';
+					if (resp.ok && data && data.success) {
+						// 成功：弹窗提示，确认后跳转到登录页
+						showConfirmModal(data.message || '注册成功，点击确定前往登录', '去登录', () => { window.location.href = "{{ url_for('auth.login') }}"; });
+						return;
+					}
+					// 失败（包含已注册）：弹窗提示，确认后回到注册页以便修改信息
+					showConfirmModal(msg, '确定', () => { window.location.href = window.location.pathname; });
+				}).catch((err) => {
+					showTopMessage('网络错误，请稍后重试', 'error');
+				});
+			});
+
+			function showTopMessage(msg, kind = 'info') {
+				// kind: 'success' | 'error' | 'info'
+				const id = 'ajax-message';
+				let outer = document.getElementById(id);
+				if (!outer) {
+					outer = document.createElement('div');
+					outer.id = id;
+					outer.style.padding = '10px 12px';
+					outer.style.borderRadius = '6px';
+					outer.style.marginBottom = '12px';
+					outer.style.fontWeight = '500';
+					outer.style.boxSizing = 'border-box';
+					const card = document.querySelector('.auth-card');
+					card.insertBefore(outer, card.querySelector('.auth-form'));
+				}
+				if (kind === 'success') {
+					outer.style.background = '#e6ffed';
+					outer.style.border = '1px solid #3bb78f';
+					outer.style.color = '#085c3d';
+				} else if (kind === 'error') {
+					outer.style.background = '#fff4f4';
+					outer.style.border = '1px solid #dd6b6b';
+					outer.style.color = '#7a1f1f';
+				} else {
+					outer.style.background = '#f5f7fa';
+					outer.style.border = '1px solid #d0d7de';
+					outer.style.color = 'var(--text)';
+				}
+				outer.textContent = msg;
+				const timeout = kind === 'success' ? 1800 : kind === 'error' ? 5000 : 3000;
+				setTimeout(() => { if (outer) outer.remove(); }, timeout);
+			}
+
+			function showConfirmModal(msg, okText = '确定', onConfirm) {
+				let modal = document.getElementById('global-confirm-modal');
+				let boxMsg = document.getElementById('global-confirm-message');
+				let okBtn = document.getElementById('global-confirm-ok');
+				if (!modal || !boxMsg || !okBtn) return;
+				boxMsg.textContent = msg;
+				okBtn.textContent = okText;
+				modal.style.display = 'flex';
+				// focus confirm button
+				okBtn.focus();
+				function cleanup() {
+					modal.style.display = 'none';
+					okBtn.removeEventListener('click', okHandler);
+					document.removeEventListener('keydown', escHandler);
+				}
+				function okHandler(e) { cleanup(); try { onConfirm && onConfirm(); } catch (e) {} }
+				function escHandler(e) { if (e.key === 'Escape') { cleanup(); } }
+				okBtn.addEventListener('click', okHandler);
+				document.addEventListener('keydown', escHandler);
+			}
+
+			function validateStep(index) {
+				// basic validations per step
+				switch(index) {
+					case 0: // job
+						if (!jobEl.value) { showFieldError('job-error', '请选择职业'); return false; }
+						updateSchoolPrompt();
+						return true;
+					case 1: // company (optional)
+						if (companyEl && companyEl.value && !textRe.test(companyEl.value.trim())) { showFieldError('company-error', '公司名称格式不正确'); return false; }
+						return true;
+					case 2: // school (required only for students)
+						const isStudent = jobEl.value && jobEl.value.indexOf('学生') !== -1;
+						if (isStudent) {
+							if (!schoolEl.value.trim()) { showFieldError('school-error', '请输入学校名称'); return false; }
+							if (!textRe.test(schoolEl.value.trim())) { showFieldError('school-error', '学校名称格式不正确'); return false; }
+						}
+						return true;
+					case 3: // major (required only for students)
+						const isStudent2 = jobEl.value && jobEl.value.indexOf('学生') !== -1;
+						if (isStudent2) {
+							if (!majorEl.value.trim()) { showFieldError('major-error', '请输入专业'); return false; }
+							if (!textRe.test(majorEl.value.trim())) { showFieldError('major-error', '专业名称格式不正确'); return false; }
+						}
+						return true;
+					case 4: // user_id (phone)
+						if (!userIdEl.value.trim()) { showFieldError('user-id-error', '请输入手机号'); return false; }
+						if (!phoneRe.test(userIdEl.value.trim())) { showFieldError('user-id-error', '手机号格式不正确'); return false; }
+						return true;
+					case 5: // password
+						if (!passwordEl.value) { showFieldError('password-error', '请输入密码'); return false; }
+						if (!passwordRe.test(passwordEl.value)) { showFieldError('password-error', '密码格式不正确'); return false; }
+						updateStrength(passwordEl.value);
+						return true;
+					case 6: // confirm
+						if (!confirmEl.value) { showFieldError('confirm-error', '请确认密码'); return false; }
+						if (confirmEl.value !== passwordEl.value) { showFieldError('confirm-error', '两次输入的密码不一致'); return false; }
+						return true;
+					case 7: // file optional
+						if (fileInput.files && fileInput.files[0]) {
+							const f = fileInput.files[0];
+							if (f.size > MAX_SIZE) { showFieldError('file-error', '学生证照片不能超过 1.5MB'); return false; }
+						}
+						return true;
+				}
+				return true;
+			}
+
+			function showFieldError(id, msg) {
+				const el = document.getElementById(id);
+				if (el) { el.textContent = msg; el.style.display = 'block'; }
+				setTimeout(() => { if (el) el.style.display = 'none'; }, 3500);
+			}
+
+			// update password strength
+			passwordEl.addEventListener('input', () => updateStrength(passwordEl.value));
+			jobEl.addEventListener('change', () => { updateSchoolPrompt(); updateConfirmNextText(); });
+			loadJobs();
+			// ensure confirm button text is correct on initial render
+			updateConfirmNextText();
+			showStep(0);
+		})();
+	</script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>注册 - Expert AI Studio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='enhanced_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='registration2.css') }}">
+
+    <style>
+    /* 注册确认弹窗配色调整 */
+    #reg-confirm-modal [role="dialog"] {
+        background: linear-gradient(180deg,#f6fffb 0%,#e6fff2 100%);
+        border: 1px solid #d1f5e6;
+        color: #063d2f;
+    }
+    #reg-confirm-msg { color: #064633; font-weight:600; }
+    #reg-confirm-ok.enh-btn.enh-btn-primary {
+        background: linear-gradient(180deg,#16a34a 0%,#0f8c3b 100%);
+        border: 1px solid rgba(0,0,0,0.06);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(16,185,129,0.12);
+    }
+    #reg-confirm-modal [role="dialog"] div[style*="justify-content:flex-end"] { padding-top:6px; }
+    /* 密码强度指示样式 */
+    .pw-strength{ margin-top:6px; display:flex; align-items:center; gap:8px; }
+    .pw-strength .pw-track{ height:8px; width:140px; background:#eef2f1; border-radius:6px; overflow:hidden; }
+    .pw-strength .pw-bar{ height:100%; width:0%; background:#ef4444; transition:width .22s ease, background .22s ease; }
+    .pw-strength .pw-text{ font-size:12px; color:#334155; min-width:56px; }
+    </style>
+
+</head>
+<body class="auth-page">
+    <div class="auth-card enh-card">
+        <div id="reg-prompt" class="reg-prompt" style="margin-bottom:12px; font-weight:600;">请选择注册类型:</div>
+        <div class="reg-choice">
+            <button id="btn-employed" class="enh-btn">已工作</button>
+            <button id="btn-not-employed" class="enh-btn">未工作</button>
+        </div>
+
+        <!-- Employed form -->
+        <form id="form-employed" class="simple-reg-form" method="post" action="{{ url_for('auth.registration') }}" enctype="multipart/form-data" style="display:none;">
+            <input type="hidden" name="job" value="在职">
+            <h3>在职用户注册</h3>
+            <label>职业
+                <select name="occupation" id="occupation" class="enh-input" required>
+                    <option value="">请选择您的职业</option>
+                </select>
+            </label>
+            <label>您目前就职于？<input name="work_location" class="enh-input" placeholder="工作城市或地区"></label>
+            <label>职业相关院校<input name="prev_school" class="enh-input" placeholder="毕业前学校"></label>
+            <label>职业相关专业<input name="prev_major" class="enh-input" placeholder="毕业前专业"></label>
+            <label>手机号<input name="user_id" class="enh-input" placeholder="11 位手机号" required></label>
+            <label>密码<input name="password" type="password" class="enh-input" required></label>
+            <div class="pw-strength" aria-hidden="false">
+                <div class="pw-track"><div class="pw-bar"></div></div>
+                <div class="pw-text">&nbsp;</div>
+            </div>
+            <label>确认密码<input name="confirm_password" type="password" class="enh-input" required></label>
+            <div class="form-footer" style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+                <button type="button" id="emp-cancel" class="enh-btn">返回</button>
+                <button type="submit" class="enh-btn enh-btn-primary">提交注册</button>
+            </div>
+        </form>
+
+        <!-- Not employed / student form -->
+        <form id="form-not-employed" class="simple-reg-form" method="post" action="{{ url_for('auth.registration') }}" enctype="multipart/form-data" style="display:none;">
+            <input type="hidden" name="job" value="学生/未工作">
+            <h3>学生用户注册</h3>
+            <label>学校<input name="school" class="enh-input" placeholder="学校名称" required></label>
+            <label>专业<input name="major" class="enh-input" placeholder="专业" required></label>
+            <label>手机号<input name="user_id" class="enh-input" placeholder="11 位手机号" required></label>
+            <label>密码<input name="password" type="password" class="enh-input" required></label>
+            <div class="pw-strength" aria-hidden="false">
+                <div class="pw-track"><div class="pw-bar"></div></div>
+                <div class="pw-text">&nbsp;</div>
+            </div>
+            <label>确认密码<input name="confirm_password" type="password" class="enh-input" required></label>
+            <label>上传学生证（可选）<input name="student_card" type="file" accept="image/*" class="enh-input"></label>
+            <div class="form-footer" style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+                <button type="button" id="notemp-cancel" class="enh-btn">返回</button>
+                <button type="submit" class="enh-btn enh-btn-primary">提交注册</button>
+            </div>
+        </form>
+
+        <div class="form-footer">已有账号？<a class="text-link" href="{{ url_for('auth.login') }}">去登录</a></div>
+    </div>
+
+    <!-- reuse small helper UI: message + confirm modal -->
+    <div id="ajax-message-global" style="position:fixed; top:18px; left:50%; transform:translateX(-50%); z-index:9999;"></div>
+
+    <div id="reg-confirm-modal" style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center;">
+        <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+        <div role="dialog" aria-modal="true" style="position:relative; background:#fff; padding:18px; border-radius:8px; width:380px; max-width:92%; box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+            <div id="reg-confirm-msg" style="margin-bottom:12px;"></div>
+            <div style="display:flex; justify-content:flex-end;"><button id="reg-confirm-ok" class="enh-btn enh-btn-primary">确定</button></div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        const btnEmp = document.getElementById('btn-employed');
+        const btnNot = document.getElementById('btn-not-employed');
+        const regChoice = document.querySelector('.reg-choice');
+        const regPrompt = document.getElementById('reg-prompt');
+        const formEmp = document.getElementById('form-employed');
+        const formNot = document.getElementById('form-not-employed');
+        const empCancel = document.getElementById('emp-cancel');
+        const notCancel = document.getElementById('notemp-cancel');
+
+        function hideAll(){ formEmp.style.display='none'; formNot.style.display='none'; }
+        btnEmp.addEventListener('click', ()=>{ hideAll(); formEmp.style.display='block'; if(regChoice) regChoice.style.display='none'; if(regPrompt) regPrompt.style.display='none'; window.scrollTo({top:0}); });
+        btnNot.addEventListener('click', ()=>{ hideAll(); formNot.style.display='block'; if(regChoice) regChoice.style.display='none'; if(regPrompt) regPrompt.style.display='none'; window.scrollTo({top:0}); });
+        empCancel.addEventListener('click', ()=>{ hideAll(); if(regChoice) regChoice.style.display='flex'; if(regPrompt) regPrompt.style.display='block'; });
+        notCancel.addEventListener('click', ()=>{ hideAll(); if(regChoice) regChoice.style.display='flex'; if(regPrompt) regPrompt.style.display='block'; });
+
+        // small helpers (copied pattern)
+        function showTopMessage(msg, kind='info'){
+            const outer = document.getElementById('ajax-message-global');
+            outer.textContent = msg; outer.style.padding='10px 14px'; outer.style.borderRadius='8px'; outer.style.fontWeight='600';
+            if(kind==='success'){ outer.style.background='#e6ffed'; outer.style.border='1px solid #3bb78f'; outer.style.color='#085c3d'; }
+            else if(kind==='error'){ outer.style.background='#fff4f4'; outer.style.border='1px solid #dd6b6b'; outer.style.color='#7a1f1f'; }
+            else { outer.style.background='#f5f7fa'; outer.style.border='1px solid #d0d7de'; outer.style.color='#081425'; }
+            setTimeout(()=>{ outer.textContent=''; outer.style.padding=''; outer.style.background=''; outer.style.border=''; outer.style.color=''; }, 3500);
+        }
+        function showConfirm(msg, onConfirm){
+            const modal = document.getElementById('reg-confirm-modal');
+            const msgEl = document.getElementById('reg-confirm-msg');
+            const ok = document.getElementById('reg-confirm-ok');
+            msgEl.textContent = msg; modal.style.display='flex'; ok.focus();
+            function cleanup(){ modal.style.display='none'; ok.removeEventListener('click', okHandler); }
+            function okHandler(){ cleanup(); onConfirm && onConfirm(); }
+            ok.addEventListener('click', okHandler);
+            document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ cleanup(); document.removeEventListener('keydown', esc); } });
+        }
+
+        // populate occupation select from JSON (if available)
+        const occEl = document.getElementById('occupation');
+        if(occEl){
+            fetch("{{ url_for('static', filename='assets/job.json') }}")
+                .then(r=>r.json())
+                .then(data=>{
+                    const list = Array.isArray(data) ? data : (data && Array.isArray(data.job) ? data.job : []);
+                    list.forEach(item=>{
+                        const opt = document.createElement('option');
+                        if(typeof item === 'string'){
+                            opt.value = item; opt.textContent = item;
+                        } else if(item && (item.id || item.value || item.name || item.label)){
+                            opt.value = item.id || item.value || item.name || item.label;
+                            opt.textContent = item.name || item.label || item.value || item.id;
+                        }
+                        occEl.appendChild(opt);
+                    });
+                }).catch(()=>{});
+        }
+
+        // password strength helper
+        function scorePassword(pw){
+            if(!pw) return 0;
+            let score = 0;
+            if(pw.length >= 8) score++;
+            if(/[a-z]/.test(pw)) score++;
+            if(/[A-Z]/.test(pw)) score++;
+            if(/\d/.test(pw)) score++;
+            if(/[^A-Za-z0-9]/.test(pw)) score++;
+            return score; // 0-5
+        }
+        function strengthMeta(score){
+            if(score <= 1) return {label:'太弱', color:'#ef4444', width:'20%'};
+            if(score === 2) return {label:'较弱', color:'#f97316', width:'40%'};
+            if(score === 3) return {label:'中等', color:'#f59e0b', width:'60%'};
+            if(score === 4) return {label:'较强', color:'#10b981', width:'80%'};
+            return {label:'非常强', color:'#059669', width:'100%'};
+        }
+        // attach listeners to password inputs (only the primary password, not confirm)
+        document.querySelectorAll('input[name="password"]').forEach(inp=>{
+            const container = inp.parentElement.nextElementSibling && inp.parentElement.nextElementSibling.classList.contains('pw-strength') ? inp.parentElement.nextElementSibling : null;
+            if(!container) return;
+            const bar = container.querySelector('.pw-bar');
+            const text = container.querySelector('.pw-text');
+            inp.addEventListener('input', ()=>{
+                const s = scorePassword(inp.value);
+                const meta = strengthMeta(s);
+                if(bar) { bar.style.width = meta.width; bar.style.background = meta.color; }
+                if(text) { text.textContent = meta.label; }
+            });
+        });
+
+        // common submit handler for both forms
+        async function handleSubmit(e){
+            e.preventDefault();
+            const form = e.target;
+            const fd = new FormData(form);
+            // basic client validation
+            if(form && form.id === 'form-employed'){
+                const occ = (fd.get('occupation')||'').trim();
+                if(!occ){ showTopMessage('请选择职业','error'); return; }
+                // optional fields: forbid special characters when provided
+                const allowedRe = /^[\u4e00-\u9fa5A-Za-z0-9\s\-\.,()（）]*$/;
+                const wl = (fd.get('work_location')||'').trim();
+                const ps = (fd.get('prev_school')||'').trim();
+                const pm = (fd.get('prev_major')||'').trim();
+                if(wl && !allowedRe.test(wl)){ showTopMessage('信息不能包含特殊字符','error'); return; }
+                if(ps && !allowedRe.test(ps)){ showTopMessage('信息不能包含特殊字符','error'); return; }
+                if(pm && !allowedRe.test(pm)){ showTopMessage('信息不能包含特殊字符','error'); return; }
+            }
+            if(form && form.id === 'form-not-employed'){
+                const school = (fd.get('school')||'').trim();
+                const major = (fd.get('major')||'').trim();
+                if(!school || !major){ showTopMessage('学校和专业为必填项','error'); return; }
+            }
+            const user_id = fd.get('user_id') || '';
+            if(!/^1\d{10}$/.test(user_id.trim())){ showTopMessage('手机号格式不正确','error'); return; }
+            const pw = fd.get('password')||''; const cpw = fd.get('confirm_password')||'';
+            if(!pw || pw !== cpw){ showTopMessage('密码为空或两次不一致','error'); return; }
+            try{
+                const resp = await fetch(form.action, { method:'POST', headers:{ 'X-Requested-With':'XMLHttpRequest' }, body:fd });
+                const data = await resp.json().catch(()=>null);
+                const msg = data && data.message ? data.message : '注册出错';
+                if(resp.ok && data && data.success){
+                    showConfirm(msg || '注册成功，前往登录', ()=> window.location.href='{{ url_for('auth.login') }}');
+                } else {
+                    showConfirm(msg, ()=> window.location.href = window.location.pathname);
+                }
+            }catch(err){ showTopMessage('网络错误，请稍后重试','error'); }
+        }
+
+        formEmp.addEventListener('submit', handleSubmit);
+        formNot.addEventListener('submit', handleSubmit);
+
+    })();
+    </script>
+</body>
+</html>

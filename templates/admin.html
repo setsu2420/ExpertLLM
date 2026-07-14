@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员面板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body data-current-user="{{ current_user_id or '' }}">
+    <button id="menu-toggle" title="收起/展开侧边栏">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <div class="sidebar-left" id="sidebar-left">
+        <div class="new-chat-btn admin-nav active" data-view="admin">
+            <span class="material-symbols-outlined">person_add</span>
+            <span>添加管理员</span>
+        </div>
+        <div class="new-chat-btn admin-nav" data-view="projects">
+            <span class="material-symbols-outlined">folder_open</span>
+            <span>查询数据</span>
+        </div>
+        <div class="new-chat-btn" onclick="location.href='/'">
+            <span class="material-symbols-outlined">home</span>
+            <span>返回首页</span>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <div class="panel-section" id="view-admin">
+            <div class="panel-title">
+                <span class="material-symbols-outlined">shield_person</span>
+                管理员列表
+            </div>
+            <div class="muted" id="admin-status"></div>
+            <div class="table-card">
+                <div class="table-scroll">
+                    <table id="admin-table" class="admin-table">
+                        <thead>
+                            <tr><th>User ID</th><th>等级</th><th>创建时间</th></tr>
+                        </thead>
+                        <tbody><tr><td colspan="3">加载中...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel-title" style="margin-top:16px;">
+                <span class="material-symbols-outlined">person_add</span>
+                添加新管理员
+            </div>
+            <div class="admin-form-row">
+                <input id="new-admin-id" type="text" placeholder="目标 user_id" autocomplete="off">
+                <input id="new-admin-level" type="number" min="1" value="1" placeholder="等级（数字）">
+                <input id="current-admin-password" type="password" placeholder="当前管理员密码">
+                <button class="primary-btn" id="add-admin-btn">添加</button>
+            </div>
+            <div class="muted" id="add-admin-status" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="panel-section hidden-panel" id="view-projects">
+            <div class="panel-title">
+                <span class="material-symbols-outlined">folder</span>
+                项目查询（projects）
+            </div>
+            <div class="admin-filter-row">
+                <div class="filter-item">
+                    <label for="project-limit" class="filter-label">数量</label>
+                    <input id="project-limit" type="number" min="1" max="200" value="50" placeholder="数量">
+                </div>
+                <button class="ghost-btn" id="refresh-projects">查询</button>
+                <button class="ghost-btn" id="export-projects">导出 CSV</button>
+                <span class="muted" id="project-status"></span>
+            </div>
+            <div class="table-card">
+                <div class="table-scroll">
+                    <table id="project-table" class="admin-table">
+                        <thead>
+                            <tr><th>Project ID</th><th>名称</th><th>用户</th><th>更新</th><th>轮次数</th><th>专家数据</th></tr>
+                        </thead>
+                        <tbody><tr><td colspan="6">加载中...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div class="sidebar-right" id="sidebar-right">
+        <div class="panel-section">
+            <div class="panel-title">
+                <span class="material-symbols-outlined">info</span>
+                右侧占位（预留扩展）
+            </div>
+            <div class="muted">此处可添加统计、系统状态等信息。</div>
+        </div>
+    </div> -->
+
+    <script src="{{ url_for('static', filename='admin.js') }}"></script>
+</body>
+</html>

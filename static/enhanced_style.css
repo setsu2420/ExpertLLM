@@ -1,0 +1,108 @@
+:root{
+  --enh-bg:#0f1724; /* deep blue */
+  --enh-card:#0b1220;
+  --enh-accent:#6ee7b7;
+  --enh-muted:#9aa4b2;
+  --enh-text:#e6eef6;
+  --enh-radius:12px;
+  --enh-shadow:0 8px 24px rgba(2,6,23,0.6);
+}
+
+/* Wrapper utility (non-invasive) */
+.enh-container{max-width:980px;margin:28px auto;padding:20px}
+
+/* Card */
+.enh-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:var(--enh-radius);box-shadow:var(--enh-shadow);padding:22px;color:var(--enh-text);border:1px solid rgba(255,255,255,0.03)}
+.enh-card .enh-card-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.enh-card .enh-card-header h1{font-size:1.25rem;margin:0;font-weight:600}
+.enh-subtext{color:var(--enh-muted);font-size:0.95rem;margin-bottom:14px}
+
+/* Form elements */
+.enh-input, .enh-select, .enh-textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--enh-text);outline:none;box-sizing:border-box}
+.enh-input::placeholder{color:rgba(230,238,246,0.45)}
+.enh-select{appearance:none;background-image:linear-gradient(45deg, transparent 50%, var(--enh-accent) 50%),linear-gradient(135deg, var(--enh-accent) 50%, transparent 50%);background-position:calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:36px}
+
+/* Improve contrast for select inputs and limit visual width */
+.enh-select{
+  background-color:rgba(6,10,20,0.95);
+  color:var(--enh-text);
+  border:1px solid rgba(255,255,255,0.06);
+  width:100%;
+  /* limit the dropdown visual height rather than width */
+  max-height:160px;
+  overflow-y:auto;
+}
+.enh-select:focus{box-shadow:0 0 0 4px rgba(110,231,183,0.08);outline:none}
+.enh-select option{background-color:#071018;color:var(--enh-text)}
+
+@media (max-width:640px){
+  .enh-select{max-height:220px}
+}
+
+/* Buttons */
+.enh-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+.enh-btn-primary{background:linear-gradient(90deg,var(--enh-accent),#34d399);color:#042018}
+.enh-btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--enh-text)}
+
+/* Step box (for multi-step UI) */
+.enh-step{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+
+/* Errors & hints */
+.enh-error{color:#ffb4b4;background:rgba(255,80,80,0.06);padding:8px 10px;border-radius:8px;border:1px solid rgba(255,80,80,0.08);font-size:0.95rem}
+.enh-hint{color:var(--enh-muted);font-size:0.92rem}
+
+/* Password strength */
+.enh-strength{display:flex;align-items:center;gap:10px}
+.enh-strength progress{height:10px;border-radius:8px;overflow:hidden}
+
+/* File input nicer */
+.enh-file-wrap{display:flex;align-items:center;gap:10px}
+.enh-file-label{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px dashed rgba(255,255,255,0.03)}
+
+/* Footer small text */
+.enh-form-footer{margin-top:18px;color:var(--enh-muted);font-size:0.95rem}
+
+/* Responsive tweaks */
+@media (max-width:640px){
+  :root{--enh-radius:10px}
+  .enh-container{padding:12px}
+}
+
+/* Small utility classes */
+.enh-row{display:flex;gap:12px;align-items:center}
+.enh-col{flex:1}
+
+/* Make progress bar colors vivid via pseudo backgrounds */
+.enh-strength progress::-webkit-progress-value{background:linear-gradient(90deg,var(--enh-accent),#60a5fa)}
+
+/* Avoid any global selector collisions: all classes are prefixed with "enh-" */
+
+/* Ensure icon elements do not block pointer events inside buttons */
+.auth-form .material-symbols-outlined,
+.nav-btn .material-symbols-outlined{
+  pointer-events: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Registration form: center and widen steps */
+.enh-form{display:flex;flex-direction:column;align-items:center}
+.enh-form .steps-wrapper{width:100%;display:flex;justify-content:center}
+.step{width:720px;max-width:92%;box-sizing:border-box}
+.enh-input,.enh-select{max-width:680px;margin:6px auto;display:block}
+
+/* Registration form navigation buttons (scoped) */
+.auth-form .step-nav{display:flex;justify-content:space-between;gap:12px;margin-top:18px}
+.auth-form .step-nav .enh-btn{min-width:64px;padding:10px 14px;border-radius:12px}
+/* unified nav button style */
+.auth-form .step-nav .nav-btn, .auth-form .step-nav .enh-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(90deg,var(--enh-accent),#60a5fa);color:#042018;border:none;padding:10px 14px;border-radius:12px;box-shadow:0 6px 18px rgba(6,20,34,0.35);transition:transform .12s ease,box-shadow .12s ease}
+.auth-form .step-nav .nav-btn:hover, .auth-form .step-nav .enh-btn:hover{transform:translateY(-2px)}
+.auth-form .step-nav .nav-btn:active, .auth-form .step-nav .enh-btn:active{transform:translateY(0)}
+.auth-form .step-nav .nav-btn .material-symbols-outlined{font-size:20px;line-height:1}
+.auth-form .primary-btn{border-radius:12px;padding:10px 16px}
+.auth-form .primary-btn.enh-btn-primary{background:linear-gradient(90deg,var(--enh-accent),#34d399);color:#042018}
+.auth-form .primary-btn.enh-btn-primary:hover{filter:brightness(1.02)}
+
+/* Disabled state */
+.auth-form .enh-btn[disabled],.auth-form .enh-btn.disabled{opacity:0.45;cursor:not-allowed;transform:none}
+

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert AI Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+</head>
+<body data-current-user="{{ current_user_id or '' }}">
+
+    <!-- 菜单切换/新工程按钮（双功能） -->
+    <button id="menu-toggle" title="{% if current_user_id %}收起/展开侧边栏{% else %}创建新工程{% endif %}">
+        <span class="material-symbols-outlined">{% if current_user_id %}menu{% else %}add{% endif %}</span>
+    </button>
+
+    <div class="topbar">
+        <div class="topbar-right">
+            {% if current_user_id %}
+            <button id="rightbar-toggle" class="icon-btn" title="展开/收起右侧栏">
+                <span class="material-symbols-outlined">view_sidebar</span>
+            </button>
+            <button id="user-menu-btn" class="icon-btn" title="账户">
+                <span class="material-symbols-outlined">account_circle</span>
+            </button>
+            {% else %}
+            <a class="auth-btn auth-btn-login topbar-auth" href="{{ url_for('auth.login') }}">登录</a>
+            <a class="auth-btn auth-btn-register topbar-auth" href="{{ url_for('auth.registration2') }}">注册</a>
+            <!-- <a class="auth-btn auth-btn-register topbar-auth" href="{{ url_for('auth.registration2') }}">快速注册</a> -->
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 仅已登录时显示左侧边栏 -->
+    {% if current_user_id %}
+    <div class="sidebar-left" id="sidebar-left">
+        <div class="new-chat-btn" id="new-chat-btn">
+            <span class="material-symbols-outlined">add</span>
+            <span>新建</span>
+        </div>
+
+        <div class="new-chat-btn" id="project-panel-btn">
+            <span class="material-symbols-outlined">folder_open</span>
+            <span>我的搜索</span>
+        </div>
+
+        <div class="mini-panels">
+            <div class="mini-panel" id="mini-public-chat-panel">
+                <div class="mini-panel-title">
+                    <span class="material-symbols-outlined">forum</span>
+                    <span class="mini-public-title-text">公共聊天</span>
+                    <span class="mini-public-profession" id="mini-public-profession"></span>
+                </div>
+                <div class="mini-public-messages" id="mini-public-messages">
+                    <div class="mini-public-empty">加载中...</div>
+                </div>
+                <div class="mini-public-input">
+                    <textarea id="mini-public-input" rows="2" placeholder="说点什么..." autocomplete="off"></textarea>
+                    <button id="mini-public-send-btn" class="mini-btn">发送</button>
+                </div>
+            </div>
+            <div class="mini-panel" id="mini-trending-panel">
+                <div class="mini-panel-title">
+                    <span class="material-symbols-outlined">whatshot</span>
+                    <span class="mini-trending-title-text">热搜榜</span>
+                    <span class="mini-trending-sub">语义热点问句</span>
+                </div>
+                <div class="mini-trending-container">
+                    <div class="mini-trending-list" id="mini-trending-list">
+                        <div class="mini-trending-empty">热搜榜加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="main-area">
+        <div class="chat-container" id="chat-container">
+            <div style="text-align: center; margin-top: 100px; opacity: 0.7;" id="welcome-msg">
+                <h1>你好，我们从哪里开始？</h1><br>
+                <p>请配置右侧模型，开始构建数据集</p>
+            </div>
+            <div id="barrage-container" class="barrage-container"></div>
+        </div>
+
+        <div class="input-area-wrapper">
+            <div class="input-box">
+                <button id="barrage-toggle-btn" class="barrage-toggle-btn" title="开启/关闭弹幕">
+                    <span class="material-symbols-outlined">featured_play_list</span>
+                </button>
+                <button id="deep-think-toggle-btn" class="deep-think-toggle-btn" title="深度思考模式">
+                    <span class="material-symbols-outlined">psychology_alt</span>
+                    <span class="deep-think-label">深度思考</span>
+                </button>
+                <textarea id="user-prompt" placeholder="在此输入专业问题..." rows="1"></textarea>
+                <button id="send-btn">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user_id %}
+    <div class="sidebar-right" id="sidebar-right">
+        <div class="panel-section" id="panel-matrix">
+            
+            <div class="panel-title">
+                <span class="material-symbols-outlined">deployed_code</span>
+                大模型选择
+            </div>
+            
+            <div class="model-option">
+                <label class="model-checkbox">
+                    <input type="checkbox" value="gemini" checked> Gemini
+                </label>
+                <select class="model-select" data-for="gemini">
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gemini-3-pro-preview">Gemini 3 Pro</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                </select>
+            </div>
+
+            <div class="model-option">
+                <label class="model-checkbox">
+                    <input type="checkbox" value="gpt"> ChatGPT
+                </label>
+                <select class="model-select" data-for="gpt">
+                    <option value="gpt-5.1">ChatGPT 5.1</option>
+                    <option value="gpt-5-mini">ChatGPT 5 mini</option>
+                </select>
+            </div>
+
+            <div class="model-option">
+                <label class="model-checkbox">
+                    <input type="checkbox" value="deepseek" checked> DeepSeek
+                </label>
+                <select class="model-select" data-for="deepseek">
+                    <option value="deepseek-ai/DeepSeek-R1">DeepSeek R1</option>
+                    <option value="deepseek-ai/DeepSeek-V3.2">DeepSeek V3.2</option>
+                </select>
+            </div>
+
+            <div class="model-option">
+                <label class="model-checkbox">
+                    <input type="checkbox" value="kimi"> Kimi
+                </label>
+                <select class="model-select" data-for="kimi">
+                    <option value="moonshotai/Kimi-K2-Thinking">Kimi-K2</option>
+                    <option value="moonshotai/Kimi-K2.5">Kimi-K2.5</option>
+                </select>
+            </div>
+
+            <div class="model-option">
+                <label class="model-checkbox">
+                    <input type="checkbox" value="qwen" checked> 通义千问
+                </label>
+                <select class="model-select" data-for="qwen">
+                    <option value="Qwen/Qwen3-14B">Qwen 3 14B</option>
+                    <option value="Qwen/Qwen3-VL-32B-Thinking">Qwen 3 思考版</option>
+                </select>
+            </div>
+
+            <div class="model-option">
+                <label class="model-checkbox">
+                    <input type="checkbox" value="zai"> 智谱华章
+                </label>
+                <select class="model-select" data-for="zai">
+                    <option value="zai-org/GLM-4.6">ZAI 4.6</option>
+                    <option value="zai-org/GLM-4.5-Air">ZAI 4.5 Air</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="panel-section expert-box-container hidden-panel" id="panel-expert">
+            <div class="panel-title">
+                <span class="material-symbols-outlined">edit_note</span>
+                专家精选集
+            </div>
+            <textarea id="expert-data" class="expert-textarea" placeholder="鼠标左键可以从左侧模型区域中选中文字，点击“摘选入库”后即可自动填入此处..."></textarea>
+            
+            <div style="margin-top: 15px;">
+                <input type="text" id="input-username" placeholder="项目分类" style="width: 100%; padding: 8px; margin-bottom: 5px; border-radius: 4px; border:1px solid #444; background:#131314; color:white; font-family: 'Microsoft YaHei';">
+                <input type="text" id="input-project" placeholder="工程命名" style="width: 100%; padding: 8px; border-radius: 4px; border:1px solid #444; background:#131314; color:white; font-family: 'Microsoft YaHei';"  autocomplete="off">
+            </div>
+            
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <button id="copy-btn" class="submit-btn" style="flex: 1;">复制内容</button>
+                <button id="save-btn" class="submit-btn" style="flex: 1;">提交入库</button>
+            </div>
+        </div>
+        
+        <!-- {% if current_user_id %}
+            <div class="panel-section" id="hot-board">
+                <div class="panel-title">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    <span id="trending-title">热点榜单</span>
+                </div>
+                <div class="trending-list" id="trending-list">
+                    <div class="trending-placeholder">榜单加载中...</div>
+                </div>
+            </div>
+        {% endif %} -->
+    </div>
+    {% endif %}
+
+    <div id="selection-popover">
+        <span class="material-symbols-outlined" style="font-size:18px;">add_circle</span>
+        摘选入库
+    </div>
+
+    <div class="project-drawer" id="project-drawer">
+        <div class="project-drawer-header">
+            <div class="project-drawer-title">我的搜索</div>
+            <button id="project-drawer-close" class="drawer-close-btn" title="关闭">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="project-drawer-body">
+            <div class="history-list" id="history-list">
+                <div class="history-item">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">提示</div>
+            <div class="modal-body" id="modal-body">内容...</div>
+            <input type="text" id="modal-input" class="modal-input" style="display:none;" placeholder="请输入..." autocomplete="off">
+            <div class="modal-actions">
+                <button class="modal-btn secondary" id="modal-cancel" style="display:none;">取消</button>
+                <button class="modal-btn primary" id="modal-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='markdown.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='talk_trend.js') }}"></script> -->
+    {% if current_user_id %}
+    <div class="user-menu-panel hidden-panel" id="user-menu-panel">
+        <div class="user-menu-header">
+            <div class="user-menu-title">账户</div>
+            <button class="icon-btn" id="user-menu-close" title="关闭">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="user-menu-body">
+            <div class="user-menu-row">
+                <span class="user-menu-label">当前用户</span>
+                <span class="user-menu-value" id="user-menu-id">{{ current_user_id }}</span>
+            </div>
+            
+            <a id="user-admin-link" class="menu-link hidden-panel" href="{{ url_for('admin.admin_page') }}">进入管理员系统</a>
+            
+            <a id="user-center-link" class="menu-link" href="/user">用户中心</a>
+            
+            <form action="{{ url_for('auth.logout') }}" method="post" class="user-menu-form">
+                <button type="submit" class="ghost-btn full-width">退出登录</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>

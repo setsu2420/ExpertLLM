@@ -1,0 +1,110 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: expertllm-mysql
+    environment:
+      # Root 用户密码（必需）
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-YourStrongPassword123!}
+      # 自动创建的数据库名
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-expertllm-db}
+      # 创建普通用户（可选，推荐）
+      MYSQL_USER: ${MYSQL_USER:-expertllm_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-UserPassword456!}
+      # 字符集配置
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "7102:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 可选：挂载自定义初始化脚本
+      # - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: 
+      - --authentication-policy=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --mysql-native-password=ON
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER:-expertllm_user}", "-p${MYSQL_PASSWORD:-UserPassword456!}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: expertllm-redis
+    # ports:
+    #   - "7102:6379"
+    command: ["redis-server", "--port", "6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  app:
+    build: .
+    container_name: ExpertLLM-V3
+    env_file: .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8885:7100"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: gunicorn -k eventlet -w 1 -b 0.0.0.0:7100 app:app --access-logfile /dev/null --error-logfile - --log-level info
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  question-worker:
+    build: .
+    container_name: expertllm-question-worker
+    env_file: .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DISABLE_APP_BOOTSTRAP=1
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python question_trending_runner.py
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: expertllm-prometheus
+    ports:
+      - "7103:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      app:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: expertllm-grafana
+    ports:
+      - "7104:3000"
+    depends_on:
+      prometheus:
+        condition: service_started
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  mysql_data:
+  grafana_data:
